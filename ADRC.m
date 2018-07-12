@@ -11,7 +11,7 @@ vo = zeros(2, 1);
 zo = zeros(3, 1);
 v1 = 0;
 ut = 0;
-alfa01=3/4; alfa02=3/2;
+alfa01=200/201; alfa02=201/200;
 delta0 = 2 * T;
 
 
@@ -81,8 +81,8 @@ function v = TD_ADRC(vo, yd, T, delta)
 end
 
 function z = ESO_ADRC(zo, y, uo, T)
-    beta1 = 100; beta2 = 200; beta3 = 500;
-    delta1 = 0.0025; alfa1 = 0.5; alfa2 = 0.25;
+    beta1 = 150; beta2 = 250; beta3 = 550;
+    delta1 = 0.15; alfa1 = 0.5; alfa2 = 0.25;
 
 	z = zeros(3, 1);
 	e = zo(1) - y;
