@@ -1,22 +1,22 @@
-%非线性自抗扰控制
+%线性自抗扰控制
 clear all;
 close all;
 
 b = 133;
 
-kp = 10; kd =0.0009;
-T=0.001;
+kp = 6.1; kd =0.0003;
+T=0.005;
 yo = zeros(3, 1);
 y = zeros(3, 1);
 vo = zeros(2, 1);
 zo = zeros(3, 1);
 v1 = 0;
 ut = 0;
-alfa01=200/201; alfa02=201/200;
-delta0 = 2 * T;
+alfa01=0.99999; alfa02=1.001;
+delta0 = 1.5 * T;
 
 
-for k=1:1:20000
+for k=1:1:4000
 	time(k) = k * T;
 	clock = k * T;
     
@@ -27,7 +27,7 @@ for k=1:1:20000
 
 	vd = TD_ADRC(vo, v1, T, 10);
 
-	zd = ESO_ADRC(zo, y(k), ut, T);
+	zd = LESO_ADRC(zo, y(k), ut, T);
 
 	e1(k) = vd(1) - zd(1);
 	e2(k) = vd(2) - zd(2);
@@ -81,15 +81,14 @@ function v = TD_ADRC(vo, yd, T, delta)
 	v(2) = vo(2) + T * fst(x1, x2, delta, T);
 end
 
-function z = ESO_ADRC(zo, y, uo, T)
-    beta1 = 150; beta2 = 250; beta3 = 550;
-    delta1 = 0.15; alfa1 = 0.5; alfa2 = 0.25;
+function z = LESO_ADRC(zo, y, uo, T)
+    w0 = 8.5;
 
 	z = zeros(3, 1);
 	e = zo(1) - y;
-	z(1) = zo(1) + T * (z(2) - beta1 * e);
-	z(2) = zo(2) + T * (z(3) - beta2 * fal(e, alfa1, delta1) + 133 * uo);
-	z(3) = zo(3) - T * beta3 * fal(e, alfa2, delta1);
+	z(1) = zo(1) + T * (z(2) -  3 * w0 * e);
+	z(2) = zo(2) + T * (z(3) - 3 * w0 * w0 * e + 133 * uo);
+	z(3) = zo(3) - T * w0 * w0 * w0 * e;
 end
 
 function dy = PlantModel(yo, ut, clock, T)
