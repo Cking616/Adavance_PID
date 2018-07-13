@@ -2,37 +2,37 @@
 clear all;
 close all;
 
-b = 133;
-
-kp = 6.1; kd =0.0003;
-T=0.005;
+kp = 6; kd =0.001;
+T=0.001;
 yo = zeros(3, 1);
 y = zeros(3, 1);
 vo = zeros(2, 1);
 zo = zeros(3, 1);
 v1 = 0;
 ut = 0;
-alfa01=0.99999; alfa02=1.001;
-delta0 = 1.5 * T;
+htl = 1.8;
+b = 133;
 
-
-for k=1:1:4000
+for k=1:1:20000
 	time(k) = k * T;
 	clock = k * T;
     
-	v(k) = sign(sin(k*T));
+	%v(k) = sign(sin(k*T));
+    % v(k) = 1;
+    v(k) = 0.0005 * k;
     ytmp = PlantModel(yo, ut, clock, T);
 	y(k) = ytmp(1);
     dy(k) = ytmp(2);
 
-	vd = TD_ADRC(vo, v1, T, 10);
-
+	% vd = TD_ADRC(vo, v1, T, htl);
+    vd = TD_Levant(vo, v1, T);
 	zd = LESO_ADRC(zo, y(k), ut, T);
 
 	e1(k) = vd(1) - zd(1);
 	e2(k) = vd(2) - zd(2);
-	u0(k) = kp *fal(e1(k), alfa01, delta0)+kd * fal(e2(k), alfa02, delta0);
-	u(k) = u0(k)-zd(3)/133;
+	%u0(k) = kp *fal(e1(k), alfa01, delta0)+kd * fal(e2(k), alfa02, delta0);
+    u0(k) = kp * e1(k) + kd * e2(k);
+	u(k) = u0(k)-zd(3)/b;
 
 	v1 = v(k);
 	vo = vd;
@@ -43,7 +43,8 @@ for k=1:1:4000
 end
 
 figure(1);
-plot(time, v, 'r', time, y, 'k:', 'linewidth', 2);
+plot(time, v, 'r',time, y, 'k:', 'linewidth', 2);
+% plot(time, e1, 'r', 'linewidth', 2);
 legend('ideal position signal', 'position tracking signal');
 
 function f = fst(x1,x2,delta,T)
@@ -82,7 +83,7 @@ function v = TD_ADRC(vo, yd, T, delta)
 end
 
 function z = LESO_ADRC(zo, y, uo, T)
-    w0 = 8.5;
+    w0 = 7.5;
 
 	z = zeros(3, 1);
 	e = zo(1) - y;
@@ -94,8 +95,16 @@ end
 function dy = PlantModel(yo, ut, clock, T)
 	dy = zeros(3, 1);
 	f = -25 * yo(2) + 33 * sin(pi * clock);
+    %f = -25 * yo(2) + 0.5 * sign(sin(pi * clock));
     dy(1) = yo(1) + yo(2) * T;
 	dy(2) = yo(2) + yo(3) * T;
 	dy(3) = (f + 133 * ut) ;
 end
 
+function v = TD_Levant(zo, y, T)
+    v = zeros(2, 1);
+    alfa = 2;
+    nmna = 6;
+    v(1) = zo(1) + T * (zo(2) - nmna * sqrt(abs(zo(1) - y)) * sign(zo(1) - y));
+    v(2) = zo(2) - T * alfa * sign(zo(1) - y);
+end
